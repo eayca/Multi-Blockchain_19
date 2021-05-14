@@ -3,6 +3,7 @@ import subprocess
 import json
 from dotenv import load_dotenv
 import os
+from pprint import pprint
 
 
 from web3 import Web3, middleware
@@ -27,18 +28,22 @@ from constants import BTC, ETH, BTCTEST
 
 # Create a function called `derive_wallets`
 def derive_wallets(coin=BTC, mnemonic=mnemonic, depth=3):
-    command = 'php derive -g --mnemonic={mnemonic} --cols=path,address,privkey,pubkey --coin={coin} --numderive={depth} --format=json'
+    command = f'php ./derive -g --mnemonic={mnemonic} --cols=all --coin={coin} --numderive={depth} --format=json'
     p = subprocess.Popen(command, stdout=subprocess.PIPE, shell=True)
+    #pprint(p.communicate())
     (output, err) = p.communicate()
     p_status = p.wait()
+    pprint(output)
     return json.loads(output)
 
-# Create a dictionary object called coins to store the output from `derive_wallets`.
 
+# Create a dictionary object called coins to store the output from `derive_wallets`.
 coins = {
     ETH: derive_wallets(coin=ETH),
     BTCTEST: derive_wallets(coin=BTCTEST),
 }
+
+pprint(coins)
 
 
 # Create a function called `priv_key_to_account` that converts privkey strings to account objects.
@@ -49,8 +54,6 @@ def priv_key_to_account(coin, priv_key):
         return PrivateKeyTestnet(priv_key)
     
     
-
-
 # Create a function called `create_tx` that creates an unsigned transaction appropriate metadata.
 def create_tx(coin, account, to, amount):
     if coin == ETH:
@@ -82,6 +85,6 @@ def send_tx(coin, account, to, amount):
     if coin == BTCTEST:
         raw_tx = create_tx(coin, account, to, amount)
         signed_tx = account.sign_transaction(raw_tx)
-    return NetworkAPI.broadcast_tx_textnet(signed_tx)
+        return NetworkAPI.broadcast_tx_textnet(signed_tx)
 
 
